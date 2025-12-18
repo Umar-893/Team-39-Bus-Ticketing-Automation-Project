@@ -1,0 +1,60 @@
+Cost Estimation n8n AI Automation for Bus Ticket Booking System 
+
+AI-powered n8n workflow for a Bus Ticket Booking System, covering costing Tools like Chat/APIs, hosting, LLM Stripe/Digital Bank, n8n Cloud, Bitly.
+Project: AI Automation – Bus Ticket Booking
+Platform: n8n
+
+Features:
+•	Chat based booking (Web / Chabot)
+•	Route search (city → city)
+•	Bus Class Selection
+•	Date Selection
+•	Seat Count
+•	Fare calculation
+•	Payment integration
+•	Booking confirmation
+•	Ticket issuance (Message via Email)
+Hosting Cost of n8n
+Option	     Cost (Monthly)	Notes
+n8n Cloud (Starter)	$20	Managed, limited executions 2500
+N8n Cloud (Professional)	$50	Execution 10000
+N8n Business Plan (Self Hosted)	$800	Execution 40000
+Self-hosted VPS	$10 – $30	Digital Ocean, AWS, etc.
+OpenAI 
+Usage	Monthly Cost (Approx.)
+Light (700–900 clients chats)	$35 – $40
+Medium (1800–2000 clients chats/Monthly)	$70 – $80
+Heavy (2000-4000 clients chats/Monthly)	$150 - $160
+Used for:
+•	Intent detection (“Book ticket Lahore to Karachi”)
+•	Passenger count extraction
+•	Date/time understanding
+•	Fare confirmation messages
+                                     Bitly Cost (URL Shorten)
+Usage	Monthly Cost (Approx.)
+Links 100 (Core Plan)	$10
+Links 500 (Growth Plan)	$29
+Links 3000 (Premium Plan)	$199
+         Supabase Database 					Payment Gateway Cost
+Plan	Monthly Cost
+Professional Plan 	$25
+Other Charges	$03/month
+Provider	Charges
+Stripe / PayPal	2.9% + fee
+Local Gateway	1.5% – 3%
+
+               Maintenance Cost		                                            Total Cost
+Plan	Charges
+Starter	$200
+Pro	$500
+Plan	Cost
+Starter	$298
+Pro	$692
+
+                               One-Time Development Cost (Market Estimate)
+Item	Cost
+Workflow Design	$300 – $600
+AI Prompt & Logic	$200 – $400
+Payment Integration	$150 – $300
+Testing & Deployment	$100 – $200
+
