@@ -1,142 +1,197 @@
-Faisal Movers Transport Booking Assistant – Node Documentation
-________________________________________
-### 1. Manual Trigger — When clicking ‘Execute workflow’
-Triggers the workflow manually for testing.
-Purpose: Starts the RAG-loading process when executed.
-________________________________________
-### 2. Google Drive — Download file
-Downloads the CSV file containing Faisal Movers transport data.
-Purpose: Supplies raw dataset for embeddings and vector store.
-Credentials Required: Google Drive OAuth2
-________________________________________
-### 3. Default Data Loader
-Converts downloaded binary file into a readable document format.
-Purpose: Prepares content for Supabase vector insertion.
-________________________________________
-### 4. Supabase Vector Store (Insert Mode)
-Inserts processed documents into the Supabase vector store.
-Purpose: Stores embeddings for RAG search.
-Credentials Required: Supabase API
-________________________________________
-### 5. Chat Trigger — When chat message received
-Public webhook that triggers the conversational agent for user messages.
-Purpose: Starts real-time chat workflow.
-________________________________________
-### 6. Supabase Vector Store (Retrieve Tool Mode)
-Provides RAG search capability to the AI Agent.
-Purpose: Returns relevant Faisal Movers data from vector embeddings.
-Credentials Required: Supabase API
-________________________________________
-### 7. Postgres Chat Memory
-Stores recent chat interactions for memory-based responses.
-Purpose: Allows context persistence across messages.
-Credentials Required: Postgres
-________________________________________
-### 8. Google Gemini/Open Ai Chat Model
-Large language model powering the AI Agent.
-Purpose: Generates conversational responses based on RAG + rules.
-Credentials Required: Google Gemini/PaLM API/Open Ai
-________________________________________
-### 9. Embeddings — Google Gemini/Open Ai
-Generates embeddings for text to be stored in Supabase.
-Purpose: Enables semantic search in vector store.
-Credentials Required: Google Gemini/PaLM API/Open Ai
-________________________________________
-### 10. AI Agent
-Main decision-making agent following rules:
-•	RAG answers
-•	Booking mode
-•	JSON output for ticket booking
-Purpose: Handles all user queries.
-________________________________________
-### 11. JSON-OUTPUT
-Extracts JSON from AI agent responses.
-Purpose: Ensures structured booking data is passed to logic nodes.
-________________________________________
-### 12. Switch
-Routes flow based on intent:
-•	check_info → general info
-•	book_ticket → ticket booking
-Purpose: Splits conversation logic.
-________________________________________
-### 13. Supabase — Fetch Fare Prices
-Queries fare based on:
-•	source
-•	destination
-•	bus class
-Purpose: Retrieves fare per route.
-Credentials Required: Supabase API
-________________________________________
-### 14. Merge
-Combines:
-•	Fare details
-•	User booking details
-Purpose: Prepares unified data for fare calculation.
-________________________________________
-### 15. Fare_Calculation
-Computes:
-totalFare = fare_price_pkr * seat_quantity
-Purpose: Final fare calculation.
-________________________________________
-### 16. Stripe — Create Checkout Session
-Creates a Stripe checkout page for ticket payment.
-Purpose: Payment processing for ticket booking.
-Credentials Required: Stripe Secret Key
-________________________________________
-### 17. Bitly — URL Shortener
-Shortens payment URL for user-friendly messaging.
-Purpose: Provides clean payment link.
-Credentials Required: Bitly API
-________________________________________
-### 18. Code in JavaScript (Extract Payment Link)
-Extracts only the final short link from Bitly response.
-Purpose: Sends simplified payment instructions.
-________________________________________
-### 19. Webhook — Stripe Payment Webhook
-Receives Stripe payment confirmation.
-Purpose: Validates ticket payment.
-________________________________________
-### 20. Code1 — Parse Stripe Signature Header
-Extracts necessary fields from stripe-signature.
-Purpose: Used for signature verification.
-________________________________________
-### 21. Crypto1 — Verify Stripe Signature
-Generates HMAC SHA256 signature.
-Purpose: Confirms webhook authenticity.
-________________________________________
-### 22. If — Signature Validity Check
-Checks:
-•	signature validity
-•	webhook type
-•	timestamp freshness
-Purpose: Prevents fraudulent callbacks.
-________________________________________
-### 23. Edit Fields
-Extracts customer & ticket details from Stripe webhook.
-Fields:
-•	Email
-•	Name
-•	Fare
-•	Booking ID
-Purpose: Prepare email data.
-________________________________________
-### 24. Stop and Error
-Stops workflow if verification fails.
-Purpose: Security enforcement.
-________________________________________
-### 25. Gmail — Send a message
-Sends confirmation email with e-ticket.
-Purpose: Delivers ticket to customer.
-Credentials Required: Gmail OAuth2
+# Bus Transport Booking Assistant (n8n Workflow)
 
-________________________________________
-🔐 Credentials Required Overview
-Service	Used In Nodes	Credential Required
-Google Drive	Download File	Google Drive OAuth2
-Supabase	Vector Store (insert + retrieve), Fare Query	Supabase API
-Postgres	Chat Memory	Postgres Credentials
-Google Gemini / PaLM	Chat Model + Embeddings	Google PaLM API
-Stripe	Create Checkout Session, Webhook Validation	Stripe Secret Key
-Gmail	Send Email	Gmail OAuth2
-Bitly	URL Shortening	Bitly API
+## 📌 Overview
+This repository contains an end-to-end AI-powered transport booking automation built using **n8n, LangChain, Supabase, Stripe, and OpenAI**.  
+The system acts as a virtual ticket assistant for **Bus Transport Company**, enabling users to:  
 
+- Ask questions about routes, fares, timings, and classes  
+- Book bus tickets via chat  
+- Generate secure Stripe payment links  
+- Verify Stripe webhook signatures  
+- Automatically email e-tickets after payment confirmation  
+
+---
+
+## ❓ Problem Statement
+Traditional bus ticket booking systems suffer from several limitations:  
+
+- Users must manually visit terminals or websites  
+- No conversational interface for queries  
+- Disconnected data sources (fares, routes, bookings)  
+- Manual payment verification  
+- No automated ticket confirmation emails  
+
+Bus Transport Company required a single automated system to:  
+
+- Answer transport-related questions accurately  
+- Collect booking details step-by-step  
+- Fetch real fares dynamically  
+- Handle secure online payments  
+- Deliver instant e-tickets via email  
+
+---
+
+## ✅ Solution Architecture
+This workflow solves the problem by combining:  
+
+- **AI Chat Agent** → Handles conversations & intent detection  
+- **Supabase Vector Store** → Stores official Bus Transport Company data  
+- **Supabase Tables** → Fetches fare prices  
+- **Stripe Checkout** → Secure payment processing  
+- **Stripe Webhooks** → Payment verification  
+- **Email Automation (Gmail)** → Sends confirmed e-tickets  
+
+All components are orchestrated inside **n8n** as a single automated pipeline.  
+
+---
+
+## 🧠 High-Level Workflow Flow
+1. User sends a chat message  
+2. AI Agent classifies intent (info or booking)  
+3. Required booking fields are collected  
+4. Fare is fetched from Supabase  
+5. Total fare is calculated  
+6. Stripe payment link is generated  
+7. Short payment URL is sent to user  
+8. Stripe webhook verifies payment  
+9. E-ticket is emailed to customer  
+
+---
+
+## 🧩 Node-by-Node Documentation
+
+### 🔹 Triggers
+1. **When clicking ‘Execute workflow’**  
+   - Type: Manual Trigger  
+   - Purpose: Testing and initializing vector data ingestion  
+
+2. **When chat message received**  
+   - Type: Chat Trigger (Webhook)  
+   - Purpose: Entry point for user chat messages  
+   - Mode: Public webhook  
+
+### 🔹 Data Ingestion & AI Knowledge Base
+3. **Download file**  
+   - Type: Google Drive  
+   - Purpose: Downloads official Bus Transport Company transport CSV data  
+
+4. **Default Data Loader**  
+   - Type: LangChain Document Loader  
+   - Purpose: Converts CSV into documents for embeddings  
+
+5. **Embeddings OpenAI**  
+   - Purpose: Generates embeddings for Bus Transport Company data  
+
+6. **Supabase Vector Store**  
+   - Mode: Insert  
+   - Purpose: Stores transport data embeddings in Supabase  
+
+7. **Supabase Vector Store1**  
+   - Mode: Retrieve-as-Tool  
+   - Purpose: Used by AI Agent to answer transport queries  
+   - Strict Rule:  
+     > If data is not found → "Sorry, I can only answer queries related to Bus Transport Company service."  
+
+### 🔹 AI & Conversation Handling
+8. **OpenAI Chat Model**  
+   - Model: GPT-4.1-mini  
+   - Temperature: 0.2  
+   - Purpose: Powers the AI Agent  
+
+9. **Postgres Chat Memory**  
+    - Purpose: Stores last 4 messages for conversation context  
+    - Table: `faisalmovers_chat_histories`  
+
+10. **AI Agent**  
+    - Purpose: Core brain of the system  
+    - Responsibilities:  
+      - Intent detection  
+      - Field collection  
+      - JSON-only output on confirmation  
+      - Strict anti-hallucination rules  
+
+11. **JSON-OUTPUT**  
+    - Type: Code Node  
+    - Purpose: Extracts valid JSON from AI output and assigns intent (`check_info` or `book_ticket`)  
+
+12. **Switch**  
+    - Purpose: Routes execution based on intent:  
+      - `check_info` → Information flow  
+      - `book_ticket` → Booking flow  
+
+### 🔹 Booking & Fare Calculation
+13. **fetching_fare_prices_along_cities**  
+    - Type: Supabase  
+    - Purpose: Fetches fare based on source, destination, and bus class  
+
+14. **Merge**  
+    - Purpose: Combines booking data + fare data  
+
+15. **Fare_Calculation**  
+    - Type: Code Node  
+    - Purpose:  
+      ```text
+      totalFare = fare_price_pkr × seat_quantity
+      ```  
+
+### 🔹 Payment & URL Handling
+16. **Stripe**  
+    - Type: HTTP Request  
+    - Purpose: Creates Stripe checkout session  
+    - Currency: PKR  
+    - Client Reference ID: Generated dynamically  
+
+17. **Set Long URL**  
+    - Purpose: Stores Stripe checkout URL  
+
+18. **Short.io API Call**  
+    - Purpose: Shortens Stripe payment link  
+    - Domain: `Aimlteam39.short.gy`  
+
+19. **Set_Node**  
+    - Purpose: Sends payment message with short link 
+
+20.   **Webhook**  
+   - Type: Webhook  
+   - Purpose: Receives Stripe payment events  
+   - Path: `/webhook_bus_payment_123`  
+   - Method: POST
+
+### 🔹 Payment Verification & Ticket Delivery
+21. **Code1**  
+    - Purpose: Extracts Stripe signature headers  
+
+22. **Crypto1**  
+    - Purpose: Generates HMAC SHA256 signature  
+
+23. **If**  
+    - Purpose: Validates signature match, event type, and timestamp freshness  
+
+24. **Stop and Error1**  
+    - Purpose: Stops execution if verification fails  
+
+25. **Edit Fields**  
+    - Purpose: Extracts customer name, email, fare, booking ID  
+
+26. **Send a message1**  
+    - Type: Gmail  
+    - Purpose: Sends HTML-styled e-ticket email  
+
+---
+
+## 🔐 Security & Compliance
+- Stripe webhook signature verification  
+- Time-based replay attack prevention  
+- Strict AI anti-hallucination rules  
+- No guessed fares or routes  
+
+---
+
+## 🛠 Tech Stack
+- n8n  
+- OpenAI (GPT-4.1-mini)  
+- LangChain  
+- Supabase (DB + Vector Store)  
+- Stripe  
+- Short.io  
+- Gmail API  
